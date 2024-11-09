@@ -25,6 +25,9 @@
         <div class="mb-3">
             <label for="exampleInputPassword1" class="form-label">image</label>
             <input type="file" name="image" class="form-control">
+            @if ($item->image)
+            <img src="{{ asset('storage/' . $item->image) }}" alt="Product Image" width="100">
+            @endif
         </div>
         <div class="mb-3">
             <label for="exampleInputPassword1" class="form-label">description</label>

@@ -5,7 +5,7 @@
     <div class="title py-4">
         Add to Product
     </div>
-    <form action="{{  route('product.store') }}" method="POST">
+    <form action="{{  route('product.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="mb-3">
             <label for="exampleInputEmail1" class="form-label">product_id</label>

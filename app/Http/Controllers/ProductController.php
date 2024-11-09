@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 
@@ -14,15 +15,26 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Product::query();
-        if ($request->has('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%')
-                ->orWhere('product_id', 'like', '%' . $request->search . '%')
-                ->orWhere('description', 'like', '%' . $request->search . '%');
+
+
+        $search = $request->input('search');
+        $sortBy = $request->input('sort_by', 'name');
+        $sortOrder = $request->input('sort_order', 'asc');
+        if ($search) {
+            $items = Product::where('product_id', 'like', "%$search%")
+                ->orWhere('name', 'like', "%$search%")
+                ->orWhere('description', 'like', "%$search%")
+                ->orWhere('price', 'like', "%$search%")
+                ->orWhere('stock', 'like', "%$search%")
+                ->orderBy($sortBy, $sortOrder)
+                ->paginate(10);
+        } else {
+
+            $items = Product::orderBy($sortBy, $sortOrder)->paginate(10);
         }
-        $items = $query
-            ->orderBy('id', 'asc')->paginate(10);
-        return view('products.index', compact('items'));
+
+
+        return view('products.index', compact('items', 'search', 'sortBy', 'sortOrder'));
     }
 
 
@@ -73,7 +85,8 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $item = Product::find($id);
+        return view('products.show', compact('item'));
     }
 
     /**
@@ -90,12 +103,31 @@ class ProductController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric',
+            'description' => 'nullable|string',
+            'stock' => 'nullable|integer',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
         $product = Product::find($id);
         $product->product_id = $request->product_id;
         $product->name = $request->name;
         $product->description = $request->description;
         $product->price = $request->price;
-        $product->stock = $request->prostockduct_id;
+        $product->stock = $request->stock;
+
+        if ($request->hasFile('image')) {
+
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+
+            $imagePath = $request->file('image')->store('images', 'public');
+            $product->image = $imagePath;
+        }
+
         $product->save();
         return redirect()->route('products')->with('success', 'Product Update Successfuly');
     }
@@ -105,10 +137,21 @@ class ProductController extends Controller
      */
     public function destroy(Request $request, string $id)
     {
+        
+        // if (!is_null($item)) {
+        //     $item->delete();
+        //     return response()->json(['success' => 'Product deleted successfully.']);
+        // }
+
         $item = Product::find($id);
-        if (!is_null($item)) {
-            $item->delete();
-            return response()->json(['success' => 'Product deleted successfully.']);
+
+        if ($item->image) {
+            Storage::disk('public')->delete($item->image);
         }
+        $item->delete();
+
+        return redirect()->route('products')->with('success', 'Product deleted successfully');
+
+
     }
 }

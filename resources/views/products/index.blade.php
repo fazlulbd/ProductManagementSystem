@@ -10,13 +10,28 @@
 <div class="product-management">
     <div class="d-flex justify-content-between py-4">
         allProduct
+        <div class="mb-3">
+            <strong>Sort By:</strong>
+            <a href="{{ route('products', ['sort_by' => 'name', 'sort_order' => (request('sort_by') == 'name' && request('sort_order') == 'asc') ? 'desc' : 'asc']) }}"
+                class="btn btn-secondary">
+                Sort by Name
+                ({{ request('sort_by') == 'name' && request('sort_order') == 'asc' ? 'Descending' : 'Ascending' }})
+            </a>
+
+            <a href="{{ route('products', ['sort_by' => 'price', 'sort_order' => (request('sort_by') == 'price' && request('sort_order') == 'asc') ? 'desc' : 'asc']) }}"
+                class="btn btn-secondary">
+                Sort by Price
+                ({{ request('sort_by') == 'price' && request('sort_order') == 'asc' ? 'Descending' : 'Ascending' }})
+            </a>
+
+        </div>
         <a href="{{ route('product.create') }}"><i class="fa-solid fa-plus"></i> Add Product</a>
     </div>
     <div class="table-wrapper">
         @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
         @endif
 
 
@@ -33,20 +48,20 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($items as $key=>$item)
-                <tr>
-                    <th scope="row">{{ $key+1 }}</th>
-                    <td>{{ $item->product_id }}</td>
-                    <td>{{  substr(($item->name),0, 20)."..." }}</td>
-                    <td></td>
-                    <td>{{ $item->price }}</td>
-                    <td>{{ $item->stock }}</td>
-                    <td>
-                        <a href=""><i class="fa-solid fa-eye"></i></a>
-                        <a href="{{ route('product.edit',$item->id) }}"><i class="fa-solid fa-pen-to-square"></i></a>
-                        <button class="delete-btn" data-id="{{ $item->id }}"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>
+                @foreach ($items as $key => $item)
+                    <tr>
+                        <th scope="row">{{ $key + 1 }}</th>
+                        <td>{{ $item->product_id }}</td>
+                        <td>{{  substr(($item->name), 0, 20) . "..." }}</td>
+                        <td style="width:15px"><img src="{{url('storage/' . $item->image)}}" alt="" class="w-100"></td>
+                        <td>{{ $item->price }}</td>
+                        <td>{{ $item->stock }}</td>
+                        <td>
+                            <a href="{{ route('product.show', $item->id) }}"><i class="fa-solid fa-eye"></i></a>
+                            <a href="{{ route('product.edit', $item->id) }}"><i class="fa-solid fa-pen-to-square"></i></a>
+                            <button class="delete-btn" data-id="{{ $item->id }}"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
                 @endforeach
             </tbody>
         </table>
@@ -60,7 +75,7 @@
 
 <script>
     // jQuery for handling delete request with confirmation
-    $(document).on('click', '.delete-btn', function() {
+    $(document).on('click', '.delete-btn', function () {
         var productId = $(this).data('id'); // Get the product ID
         var row = $(this).closest('tr'); // Get the row of the product to be deleted
 
@@ -73,12 +88,12 @@
                 data: {
                     _token: '{{ csrf_token() }}', // CSRF token for security
                 },
-                success: function(response) {
+                success: function (response) {
                     // On success, remove the row from the table
                     row.remove();
                     alert(response.success); // Show a success message (optional)
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     alert('Something went wrong. Please try again.'); // Error handling
                 }
             });
